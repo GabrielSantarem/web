@@ -6,6 +6,5 @@ type Message struct {
 }
 
 type Me struct {
-	Name  string `json:"name"`
-	IsGay bool   `json:"is_gay"`
+	Name string `json:"name"`
 }
