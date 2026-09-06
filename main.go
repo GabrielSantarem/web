@@ -1,7 +1,14 @@
 package main
 
 import (
+	"context"
+	"errors"
+	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"codeberg.org/MrTomate/web/handler"
 )
@@ -18,5 +25,30 @@ func main() {
 		http.ServeFile(w, r, "assets/favicon.ico")
 	})
 
-	http.ListenAndServe(":8080", mux)
+	srv := &http.Server{
+		Addr:    ":8080",
+		Handler: mux,
+	}
+
+	stop := make(chan os.Signal, 1)
+
+	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
+
+	go func() {
+		log.Println("Servidor iniciador na porta :8080...")
+		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			log.Fatalf("Erro Fatal no servidor: %v ", err)
+		}
+	}()
+	<-stop
+
+	log.Println("Sinal de desligamento.... Iniciando ShutDown!!!")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Fatalf("Erro durante o desligamento forçado : %v", err)
+	}
+	log.Println("GoodBye!!")
 }
