@@ -14,8 +14,3 @@ func main() {
 
 	http.ListenAndServe(":8080", mux)
 }
-
-type Message struct {
-	Message string `json:"message"`
-	Id      int    `json:"id"`
-}
