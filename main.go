@@ -27,7 +27,7 @@ func main() {
 
 	srv := &http.Server{
 		Addr:    ":8080",
-		Handler: mux,
+		Handler: Logger(mux),
 	}
 
 	stop := make(chan os.Signal, 1)
@@ -51,4 +51,16 @@ func main() {
 		log.Fatalf("Erro durante o desligamento forçado : %v", err)
 	}
 	log.Println("GoodBye!!")
+}
+
+// Um Logger simples
+func Logger(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+		next.ServeHTTP(w, r)
+		log.Printf("METHOD: %s | URL: %s | TIME: %s",
+			r.Method,
+			r.URL.Path,
+			time.Since(start))
+	})
 }
