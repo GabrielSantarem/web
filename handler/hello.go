@@ -7,7 +7,7 @@ import (
 	"codeberg.org/MrTomate/web/types"
 )
 
-func HelloHandler() http.HandlerFunc {
+func HandleHello() http.HandlerFunc {
 
 	s := types.Message{Message: "Hello", Id: 1}
 
