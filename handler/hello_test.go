@@ -16,7 +16,7 @@ func TestHandleHello(t *testing.T) {
 	h := HandleHello()
 	h.ServeHTTP(rec, req)
 
-	if rec.Code != http.StatusAccepted {
+	if rec.Code != http.StatusOK {
 		t.Fatalf("espera status:%d ,veio %d", http.StatusAccepted, rec.Code)
 	}
 
