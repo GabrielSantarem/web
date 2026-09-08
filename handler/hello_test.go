@@ -5,8 +5,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-
-	"codeberg.org/MrTomate/web/types"
 )
 
 func TestHandleHello(t *testing.T) {
@@ -26,7 +24,7 @@ func TestHandleHello(t *testing.T) {
 		t.Fatalf("esperava Content-Type application/json veio %q", gotContentType)
 	}
 
-	var got types.Message
+	var got Message
 
 	err := json.NewDecoder(rec.Body).Decode(&got)
 	if err != nil {
@@ -47,7 +45,7 @@ func TestHandleMe(t *testing.T) {
 		t.Fatalf("esperava status %d, veio %d", http.StatusOK, rec.Code)
 	}
 
-	var got types.Me
+	var got Me
 
 	err := json.NewDecoder(rec.Body).Decode(&got)
 

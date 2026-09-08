@@ -3,13 +3,11 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
-
-	"codeberg.org/MrTomate/web/types"
 )
 
 func HandleHello() http.HandlerFunc {
 
-	s := types.Message{Message: "Hello", Id: 1}
+	s := Message{Message: "Hello", Id: 1}
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -23,7 +21,7 @@ func HandleMe() http.HandlerFunc {
 
 		name := r.PathValue("Name")
 
-		me := types.Me{
+		me := Me{
 			Name: name,
 		}
 
