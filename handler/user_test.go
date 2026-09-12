@@ -80,4 +80,22 @@ func TestHandleCreateUser(t *testing.T) {
 			t.Fatalf("status: want %d, got %d", http.StatusBadRequest, rec.Code)
 		}
 	})
+
+	t.Run("email duplicado retorna 409  conflict", func(t *testing.T) {
+		body := strings.NewReader(`{"name":"tomate","email":"tomate@gmail.com"}`)
+		req := httptest.NewRequest(http.MethodPost, "/user/create", body)
+		rec := httptest.NewRecorder()
+		h := newHandler()
+
+		// Primeiro insert
+		h.ServeHTTP(httptest.NewRecorder(), req)
+
+		// segundo insert, mesmo request
+		h.ServeHTTP(rec, req)
+
+		if rec.Code != http.StatusConflict {
+			t.Fatalf("status: want %d, got %d", http.StatusConflict, rec.Code)
+		}
+
+	})
 }
