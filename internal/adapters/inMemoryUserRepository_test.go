@@ -17,6 +17,8 @@ func TestInMemoryUserRepository(t *testing.T) {
 }
 
 func TestInMemoryUserRepository_AddUser(t *testing.T) {
+	newRepo := NewInMemoryUserRepository
+
 	t.Run("salva um user no repo", func(t *testing.T) {
 		repo := NewInMemoryUserRepository()
 		user := &core.User{
@@ -32,7 +34,16 @@ func TestInMemoryUserRepository_AddUser(t *testing.T) {
 		}
 	})
 
-	t.Run("Email duplicado retorna um error", func(t *testing.T) {
-	
+	t.Run("email duplicado retorna um error", func(t *testing.T) {
+		user := core.NewUser("tomate@test.com", "Tomate")
+		repo := newRepo()
+
+		repo.CreateUser(user)
+
+		_, err := repo.CreateUser(user)
+
+		if err != core.ErrEmailAlreadyUsed {
+			t.Fatalf("email: expected %s, got %s", core.ErrEmailAlreadyUsed, err)
+		}
 	})
 }
