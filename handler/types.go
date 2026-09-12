@@ -24,3 +24,9 @@ func (r *UserCreateRequest) ToUser() *core.User {
 		Email: r.Email,
 	}
 }
+
+// tipo pra testes de error nos handlers
+type ErrorResponse struct {
+	Message string            `json:"message"`
+	Errors  map[string]string `json:"errors"`
+}
