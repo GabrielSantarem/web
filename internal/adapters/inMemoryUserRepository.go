@@ -1,12 +1,18 @@
 package adapters
 
-import "codeberg.org/MrTomate/web/internal/core"
+import (
+	"strconv"
+
+	"codeberg.org/MrTomate/web/internal/core"
+)
 
 type InMemoryUserRepository struct {
 	users []*core.User
 }
 
 func (r *InMemoryUserRepository) Save(u *core.User) (*core.User, error) {
+	id :=  len(r.users)
+	u.ID =  strconv.Itoa(id+1)
 	r.users = append(r.users, u)
 	return u, nil
 }

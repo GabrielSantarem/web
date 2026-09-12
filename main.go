@@ -11,9 +11,15 @@ import (
 	"time"
 
 	"codeberg.org/MrTomate/web/handler"
+	"codeberg.org/MrTomate/web/internal/adapters"
+	"codeberg.org/MrTomate/web/internal/core"
 )
 
 func main() {
+
+	adapter := adapters.NewInMemoryUserRepository()
+	service := core.NewUserService(  adapter )
+	
 
 	mux := http.NewServeMux()
 
@@ -24,6 +30,7 @@ func main() {
 	mux.HandleFunc("GET /favicon.ico", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "assets/favicon.ico")
 	})
+	mux.HandleFunc("POST /users/create",  handler.HandleCreateUser(service))
 
 	srv := &http.Server{
 		Addr:    ":8080",
