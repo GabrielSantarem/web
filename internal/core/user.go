@@ -1,7 +1,5 @@
 package core
 
-import "errors"
-
 // UserRepository define as operações de persistência de que o domínio precisa.
 type UserRepository interface {
 	// CreateUser cria um novo usuário no repositório.
@@ -56,13 +54,13 @@ func NewUserService(r UserRepository) UserService {
 
 func (s *userService) CreateUser(u *User) (*User, error) {
 	if u.Email == "" {
-		return nil, errors.New("email é obrigatório")
+		return nil, ErrInvalidInput
 	}
 	if u.Name == "" {
-		return nil, errors.New("name é obrigatório")
+		return nil, ErrInvalidInput
 	}
 
-	return s.repo.Save(u)
+	return s.repo.CreateUser(u)
 }
 
 func (s *userService) GetUser(id string) (*User, error) {
@@ -76,12 +74,12 @@ func (s *userService) ActivateUser(id string) error {
 	}
 
 	if user.IsActive {
-		return errors.New("user ja esta ativo")
+		return ErrUserAlreadyActive
 	}
 
 	user.IsActive = true
 
-	_, err = s.repo.Save(user)
+	_, err = s.repo.UpdateUser(user)
 
 	if err != nil {
 		return err
