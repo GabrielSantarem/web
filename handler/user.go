@@ -16,6 +16,8 @@ func HandleCreateUser(srv core.UserService) http.HandlerFunc {
 
 		err := json.NewDecoder(r.Body).Decode(&newUser)
 
+		w.Header().Set("Content-Type", "application/json")
+
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			json.NewEncoder(w).Encode(map[string]string{
