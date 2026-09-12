@@ -17,16 +17,22 @@ func TestInMemoryUserRepository(t *testing.T) {
 }
 
 func TestInMemoryUserRepository_AddUser(t *testing.T) {
-	repo := NewInMemoryUserRepository()
-	user := &core.User{
-		ID:   "1",
-		Name: "test",
-	}
-	_, err := repo.Save(user)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(repo.users) != 1 {
-		t.Fatal("users slice should have 1 element")
-	}
+	t.Run("salva um user no repo", func(t *testing.T) {
+		repo := NewInMemoryUserRepository()
+		user := &core.User{
+			ID:   "1",
+			Name: "test",
+		}
+		_, err := repo.CreateUser(user)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(repo.users) != 1 {
+			t.Fatal("users slice should have 1 element")
+		}
+	})
+
+	t.Run("Email duplicado retorna um error", func(t *testing.T) {
+	
+	})
 }
