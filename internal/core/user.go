@@ -15,16 +15,10 @@ type UserRepository interface {
 // User representa um usuário no sistema.
 // Nossa classe de domínio.
 type User struct {
-	ID       string `json:"id"`
-	Email    string `json:"email"`
-	Name     string `json:"name"`
-	IsActive bool   `json:"is_active"`
-}
-
-// NewUser cria um novo usuário com os dados fornecidos.
-// Retorna um ponteiro para um novo User com os campos vazios.
-func NewEmptyUser() *User {
-	return &User{}
+	ID       string
+	Email    string
+	Name     string
+	IsActive bool
 }
 
 // NewUser cria um novo usuário com os dados fornecidos.
