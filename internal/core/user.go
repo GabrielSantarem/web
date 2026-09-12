@@ -4,8 +4,12 @@ import "errors"
 
 // UserRepository define as operações de persistência de que o domínio precisa.
 type UserRepository interface {
-	// Save salva um usuário no repositório.
-	Save(u *User) (*User, error)
+	// CreateUser cria um novo usuário no repositório.
+	CreateUser(u *User) (*User, error)
+
+	// UpdateUser atualiza um usuário no repositório.
+	UpdateUser(u *User) (*User, error)
+
 	// FindById retorna um usuário pelo ID.
 	FindById(id string) (*User, error)
 	// FindByEmail retorna um usuário pelo email.
