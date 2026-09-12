@@ -68,7 +68,7 @@ func TestHandleNotFound(t *testing.T) {
 	if rec.Code != http.StatusSeeOther {
 		t.Fatalf("esperava status %d, veio %d", http.StatusSeeOther, rec.Code)
 	}
-
+	
 	location := rec.Header().Get("Location")
 	if location != "/" {
 		t.Fatalf("espereva redirect pra '/' veio %q", location)
