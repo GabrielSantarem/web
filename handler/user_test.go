@@ -13,8 +13,6 @@ import (
 )
 
 func TestHandleCreateUser(t *testing.T) {
-	// factory: cada subtest ganha um handler novo com repo limpo,
-	// sem estado compartilhado entre testes
 	newHandler := func() http.HandlerFunc {
 		repo := adapters.NewInMemoryUserRepository()
 		return handler.HandleCreateUser(core.NewUserService(repo))
@@ -58,13 +56,11 @@ func TestHandleCreateUser(t *testing.T) {
 			t.Fatalf("status: want %d, got %d", http.StatusBadRequest, rec.Code)
 		}
 
-		var got struct {
-			Error string `json:"error"`
-		}
+		var got handler.ErrorResponse
 		if err := json.NewDecoder(rec.Body).Decode(&got); err != nil {
 			t.Fatalf("decoding response body: %v", err)
 		}
-		if got.Error == "" {
+		if got.Message == "" && got.Error() == "" {
 			t.Error("expected non-empty error message")
 		}
 	})
@@ -81,21 +77,45 @@ func TestHandleCreateUser(t *testing.T) {
 		}
 	})
 
-	t.Run("email duplicado retorna 409  conflict", func(t *testing.T) {
-		body := strings.NewReader(`{"name":"tomate","email":"tomate@gmail.com"}`)
+	t.Run("json invalidos devem retorna um erro", func(t *testing.T) {
+		body := strings.NewReader(`{"name":"To","email":"tomate#teste"}`)
 		req := httptest.NewRequest(http.MethodPost, "/user/create", body)
 		rec := httptest.NewRecorder()
+
+		var errBody handler.ErrorResponse
+
+		h := newHandler()
+		h.ServeHTTP(rec, req)
+
+		if err := json.NewDecoder(rec.Body).Decode(&errBody); err != nil {
+			t.Fatal("parse body response failure")
+		}
+
+		if errBody.Message != handler.ErrValidationFailure.Error() {
+			t.Fatalf("validation: expected %s, got %s", handler.ErrValidationFailure.Error(), errBody.Message)
+		}
+	})
+
+	t.Run("email duplicado retorna 409 conflict", func(t *testing.T) {
+		payload := `{"name":"tomate","email":"tomate@gmail.com"}`
 		h := newHandler()
 
 		// Primeiro insert
-		h.ServeHTTP(httptest.NewRecorder(), req)
+		req1 := httptest.NewRequest(http.MethodPost, "/user/create", strings.NewReader(payload))
+		rec1 := httptest.NewRecorder()
+		h.ServeHTTP(rec1, req1)
 
-		// segundo insert, mesmo request
-		h.ServeHTTP(rec, req)
-
-		if rec.Code != http.StatusConflict {
-			t.Fatalf("status: want %d, got %d", http.StatusConflict, rec.Code)
+		if rec1.Code != http.StatusCreated {
+			t.Fatalf("first insert status: want %d, got %d", http.StatusCreated, rec1.Code)
 		}
 
+		// Segundo insert (instanciando uma nova requisição com novo buffer)
+		req2 := httptest.NewRequest(http.MethodPost, "/user/create", strings.NewReader(payload))
+		rec2 := httptest.NewRecorder()
+		h.ServeHTTP(rec2, req2)
+
+		if rec2.Code != http.StatusConflict {
+			t.Fatalf("second insert status: want %d, got %d", http.StatusConflict, rec2.Code)
+		}
 	})
 }
