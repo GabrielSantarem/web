@@ -1,6 +1,14 @@
 package handler
 
-import "codeberg.org/MrTomate/web/internal/core"
+import (
+	"errors"
+
+	"codeberg.org/MrTomate/web/internal/core"
+)
+
+var (
+	ErrValidationFailure = errors.New("validation failure")
+)
 
 // Message representa a resposta simples do endpoint hello.
 type Message struct {
@@ -25,8 +33,16 @@ func (r *UserCreateRequest) ToUser() *core.User {
 	}
 }
 
-// tipo pra testes de error nos handlers
+// ErrorResponse padroniza todas as respostas de erro da API.
 type ErrorResponse struct {
 	Message string            `json:"message"`
-	Errors  map[string]string `json:"errors"`
+	Err     string            `json:"error,omitempty"`
+	Errors  map[string]string `json:"errors,omitempty"`
+}
+
+func (e *ErrorResponse) Error() string {
+	if e.Err != "" {
+		return e.Err
+	}
+	return e.Message
 }
