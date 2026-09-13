@@ -5,10 +5,7 @@ import (
 	"net/http"
 
 	"codeberg.org/MrTomate/web/internal/core"
-	"github.com/go-playground/validator/v10"
 )
-
-var validatorInstance = validator.New()
 
 func HandleCreateUser(srv core.UserService) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
