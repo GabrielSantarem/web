@@ -16,10 +16,8 @@ import (
 )
 
 func main() {
-
 	adapter := adapters.NewInMemoryUserRepository()
-	service := core.NewUserService(  adapter )
-	
+	service := core.NewUserService(adapter)
 
 	mux := http.NewServeMux()
 
@@ -30,37 +28,49 @@ func main() {
 	mux.HandleFunc("GET /favicon.ico", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "assets/favicon.ico")
 	})
-	mux.HandleFunc("POST /users/create",  handler.HandleCreateUser(service))
+	mux.HandleFunc("POST /users/create", handler.HandleCreateUser(service))
 
 	srv := &http.Server{
-		Addr:    ":8080",
-		Handler: Logger(mux),
+		Addr:         ":8080",
+		Handler:      Logger(mux),
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 10 * time.Second,
+		IdleTimeout:  15 * time.Second,
 	}
 
-	stop := make(chan os.Signal, 1)
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
 
-	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
+	serverErrors := make(chan error, 1)
 
 	go func() {
-		log.Println("Servidor iniciador na porta :8080...")
+		log.Println("Servidor iniciado na porta :8080...")
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			log.Fatalf("Erro Fatal no servidor: %v ", err)
+			serverErrors <- err
 		}
 	}()
-	<-stop
 
-	log.Println("Sinal de desligamento.... Iniciando ShutDown!!!")
+	select {
+	case err := <-serverErrors:
+		log.Fatalf("Erro fatal no servidor: %v", err)
+	case <-ctx.Done():
+		log.Println("Sinal de desligamento recebido. Iniciando graceful shutdown...")
+	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	if err := srv.Shutdown(ctx); err != nil {
-		log.Fatalf("Erro durante o desligamento forçado : %v", err)
+	if err := srv.Shutdown(shutdownCtx); err != nil {
+		log.Printf("Erro durante o desligamento forçado do servidor HTTP: %v", err)
+		if err := srv.Close(); err != nil {
+			log.Fatalf("Erro ao fechar conexões ativas: %v", err)
+		}
 	}
-	log.Println("GoodBye!!")
+
+	// Espaço reservado para liberação de outros recursos (ex: adapter.Close())
+	log.Println("Servidor finalizado com sucesso.")
 }
 
-// Um Logger simples
 func Logger(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
