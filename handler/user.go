@@ -34,7 +34,7 @@ func HandleCreateUser(srv core.UserService) http.HandlerFunc {
 
 		user, err := srv.CreateUser(newUser.ToUser())
 		if err != nil {
-			if errors.Is(err, core.ErrUserAlreadyExists) {
+			if errors.Is(err, core.ErrUserAlreadyExists) || errors.Is(err, core.ErrEmailAlreadyUsed) {
 				w.WriteHeader(http.StatusConflict)
 				json.NewEncoder(w).Encode(ErrorResponse{
 					Message: "email ja cadastrado",
