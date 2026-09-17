@@ -23,6 +23,11 @@ type User struct {
 	IsActive bool
 }
 
+// GetID retorna o identificador do usuário, satisfazendo core.Entity.
+func (u *User) GetID() string {
+	return u.ID
+}
+
 // NewUser cria um novo usuário com os dados fornecidos.
 // Retorna um ponteiro para um novo User com os campos preenchidos.
 func NewUser(email, name string) *User {
