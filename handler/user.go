@@ -55,3 +55,89 @@ func HandleCreateUser(srv core.UserService) http.HandlerFunc {
 		json.NewEncoder(w).Encode(user)
 	})
 }
+
+func HandleGetUser(srv core.UserService) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+
+		id := r.PathValue("id")
+		if id == "" {
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(ErrorResponse{
+				Message: "id obrigatorio",
+			})
+			return
+		}
+
+		user, err := srv.GetUser(id)
+		if err != nil {
+			if errors.Is(err, core.ErrUserNotFound) {
+				w.WriteHeader(http.StatusNotFound)
+				json.NewEncoder(w).Encode(ErrorResponse{
+					Message: "usuario nao encontrado",
+					Err:     err.Error(),
+				})
+				return
+			}
+
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(ErrorResponse{
+				Message: "erro interno no servidor",
+				Err:     err.Error(),
+			})
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(user)
+	})
+}
+
+func HandleActivateUser(srv core.UserService) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+
+		id := r.PathValue("id")
+		if id == "" {
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(ErrorResponse{
+				Message: "id obrigatorio",
+			})
+			return
+		}
+
+		err := srv.ActivateUser(id)
+		if err != nil {
+			if errors.Is(err, core.ErrUserNotFound) {
+				w.WriteHeader(http.StatusNotFound)
+				json.NewEncoder(w).Encode(ErrorResponse{
+					Message: "usuario nao encontrado",
+					Err:     err.Error(),
+				})
+				return
+			}
+
+			if errors.Is(err, core.ErrUserAlreadyActive) {
+				w.WriteHeader(http.StatusConflict)
+				json.NewEncoder(w).Encode(ErrorResponse{
+					Message: "usuario ja esta ativo",
+					Err:     err.Error(),
+				})
+				return
+			}
+
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(ErrorResponse{
+				Message: "erro interno no servidor",
+				Err:     err.Error(),
+			})
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(map[string]string{
+			"message": "usuario ativado com sucesso",
+		})
+	})
+}
+

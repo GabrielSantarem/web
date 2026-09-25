@@ -119,3 +119,110 @@ func TestHandleCreateUser(t *testing.T) {
 		}
 	})
 }
+
+func TestHandleGetUser(t *testing.T) {
+	repo := adapters.NewInMemoryUserRepository()
+	service := core.NewUserService(repo)
+	user, err := service.CreateUser(core.NewUser("test@user.com", "Test User"))
+	if err != nil {
+		t.Fatalf("setup: failed to create user: %v", err)
+	}
+
+	h := handler.HandleGetUser(service)
+
+	t.Run("usuario existente retorna 200 e dados corretos", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, "/users/"+user.ID, nil)
+		req.SetPathValue("id", user.ID)
+		rec := httptest.NewRecorder()
+
+		h.ServeHTTP(rec, req)
+
+		if rec.Code != http.StatusOK {
+			t.Fatalf("status: want %d, got %d", http.StatusOK, rec.Code)
+		}
+
+		var got core.User
+		if err := json.NewDecoder(rec.Body).Decode(&got); err != nil {
+			t.Fatalf("decoding body: %v", err)
+		}
+		if got.ID != user.ID || got.Email != user.Email {
+			t.Errorf("dados incorretos: %+v", got)
+		}
+	})
+
+	t.Run("usuario inexistente retorna 404", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, "/users/9999", nil)
+		req.SetPathValue("id", "9999")
+		rec := httptest.NewRecorder()
+
+		h.ServeHTTP(rec, req)
+
+		if rec.Code != http.StatusNotFound {
+			t.Fatalf("status: want %d, got %d", http.StatusNotFound, rec.Code)
+		}
+	})
+
+	t.Run("sem id na rota retorna 400", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, "/users/", nil)
+		rec := httptest.NewRecorder()
+
+		h.ServeHTTP(rec, req)
+
+		if rec.Code != http.StatusBadRequest {
+			t.Fatalf("status: want %d, got %d", http.StatusBadRequest, rec.Code)
+		}
+	})
+}
+
+func TestHandleActivateUser(t *testing.T) {
+	repo := adapters.NewInMemoryUserRepository()
+	service := core.NewUserService(repo)
+	user, err := service.CreateUser(core.NewUser("activate@user.com", "Active User"))
+	if err != nil {
+		t.Fatalf("setup: failed to create user: %v", err)
+	}
+
+	h := handler.HandleActivateUser(service)
+
+	t.Run("ativa usuario inativo com sucesso retornando 200", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodPatch, "/users/"+user.ID+"/activate", nil)
+		req.SetPathValue("id", user.ID)
+		rec := httptest.NewRecorder()
+
+		h.ServeHTTP(rec, req)
+
+		if rec.Code != http.StatusOK {
+			t.Fatalf("status: want %d, got %d", http.StatusOK, rec.Code)
+		}
+
+		u, _ := service.GetUser(user.ID)
+		if !u.IsActive {
+			t.Error("usuario deveria estar ativo")
+		}
+	})
+
+	t.Run("tentar ativar usuario ja ativo retorna 409", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodPatch, "/users/"+user.ID+"/activate", nil)
+		req.SetPathValue("id", user.ID)
+		rec := httptest.NewRecorder()
+
+		h.ServeHTTP(rec, req)
+
+		if rec.Code != http.StatusConflict {
+			t.Fatalf("status: want %d, got %d", http.StatusConflict, rec.Code)
+		}
+	})
+
+	t.Run("usuario inexistente retorna 404", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodPatch, "/users/9999/activate", nil)
+		req.SetPathValue("id", "9999")
+		rec := httptest.NewRecorder()
+
+		h.ServeHTTP(rec, req)
+
+		if rec.Code != http.StatusNotFound {
+			t.Fatalf("status: want %d, got %d", http.StatusNotFound, rec.Code)
+		}
+	})
+}
+

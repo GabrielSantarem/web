@@ -29,6 +29,8 @@ func main() {
 		http.ServeFile(w, r, "assets/favicon.ico")
 	})
 	mux.HandleFunc("POST /users/create", handler.HandleCreateUser(service))
+	mux.HandleFunc("GET /users/{id}", handler.HandleGetUser(service))
+	mux.HandleFunc("PATCH /users/{id}/activate", handler.HandleActivateUser(service))
 
 	srv := &http.Server{
 		Addr:         ":8080",
