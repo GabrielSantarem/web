@@ -1,17 +1,15 @@
 package core
 
 // UserRepository define as operações de persistência de que o domínio precisa.
+// Estende o contrato genérico Repository[*User] e adiciona buscas específicas.
 type UserRepository interface {
-	// CreateUser cria um novo usuário no repositório.
-	CreateUser(u *User) (*User, error)
-
-	// UpdateUser atualiza um usuário no repositório.
-	UpdateUser(u *User) (*User, error)
-
-	// FindById retorna um usuário pelo ID.
-	FindById(id string) (*User, error)
-	// FindByEmail retorna um usuário pelo email.
+	Repository[*User]
 	FindByEmail(email string) (*User, error)
+
+	// Métodos mantidos para conveniência e compatibilidade
+	CreateUser(u *User) (*User, error)
+	UpdateUser(u *User) (*User, error)
+	FindById(id string) (*User, error)
 }
 
 // User representa um usuário no sistema.
@@ -65,11 +63,11 @@ func (s *userService) CreateUser(u *User) (*User, error) {
 		return nil, ErrInvalidInput
 	}
 
-	return s.repo.CreateUser(u)
+	return s.repo.Create(u)
 }
 
 func (s *userService) GetUser(id string) (*User, error) {
-	return s.repo.FindById(id)
+	return s.repo.FindByID(id)
 }
 
 func (s *userService) ActivateUser(id string) error {
@@ -84,8 +82,7 @@ func (s *userService) ActivateUser(id string) error {
 
 	user.IsActive = true
 
-	_, err = s.repo.UpdateUser(user)
-
+	_, err = s.repo.Update(user)
 	if err != nil {
 		return err
 	}

@@ -56,6 +56,31 @@ func (m *mockUserRepository) FindById(id string) (*core.User, error) {
 	return u, nil
 }
 
+func (m *mockUserRepository) Create(u *core.User) (*core.User, error) {
+	return m.CreateUser(u)
+}
+
+func (m *mockUserRepository) Update(u *core.User) (*core.User, error) {
+	return m.UpdateUser(u)
+}
+
+func (m *mockUserRepository) FindByID(id string) (*core.User, error) {
+	return m.FindById(id)
+}
+
+func (m *mockUserRepository) FindAll() ([]*core.User, error) {
+	all := make([]*core.User, 0, len(m.users))
+	for _, u := range m.users {
+		all = append(all, u)
+	}
+	return all, nil
+}
+
+func (m *mockUserRepository) Delete(id string) error {
+	delete(m.users, id)
+	return nil
+}
+
 func (m *mockUserRepository) FindByEmail(email string) (*core.User, error) {
 	for _, u := range m.users {
 		if u.Email == email {
