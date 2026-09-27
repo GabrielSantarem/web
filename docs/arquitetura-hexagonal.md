@@ -1,26 +1,37 @@
 # Arquitetura Hexagonal (Ports and Adapters)
 
-O padrão estabelece o isolamento absoluto das regras de domínio, protegendo-as de dependências externas. 
-As classes de domínio não possuem conhecimento sobre a origem ou o destino dos dados; 
-o fluxo de comunicação ocorre exclusivamente através de interfaces predefinidas.
+A ideia principal da arquitetura hexagonal e isolar as regras de negocio do resto do sistema (banco de dados, frameworks web, linha de comando).
 
-![Arquitetura Hexagonal](../assets/arquitetura-hexagonal.svg)
+## Conceitos basicos
 
-## Portas e Adaptadores
+- **Dominio / Core**: onde fica a logica de negocio pura e as entidades. Nao depende de nada de fora (sem http, sem sql).
+- **Portas (Ports)**: sao as interfaces do Go. Definem os contratos de comunicacao.
+  - *Entrada*: o que o servico oferece para o mundo externo chamar (ex: `UserService`).
+  - *Saida*: o que o servico precisa para salvar ou buscar dados (ex: `UserRepository`, `Repository[T]`).
+- **Adaptadores (Adapters)**: sao as implementacoes reais das interfaces.
+  - *Entrada*: handlers HTTP, rotas, controladores (ex: `handler/user.go`).
+  - *Saida*: banco de dados, armazenamento em memoria (ex: `adapters/memory_repository.go`).
 
-* **Portas:** São as interfaces. Elas definem o contrato de comunicação.
-  * *Entrada:* Declara os serviços que o sistema oferece ao exterior.
-  * *Saída:* Declara as dependências que o sistema exige do exterior.
-* **Adaptadores:** São as implementações concretas que traduzem a comunicação do sistema externo para os contratos das portas.
+## Estrutura no projeto
 
-### Fluxo de Execução
+- `internal/core`: regras de negocio, entidades e interfaces (portas).
+- `internal/adapters`: implementacoes de persistencia em memoria (adaptadores de saida).
+- `handler`: rotas e controladores HTTP (adaptadores de entrada).
+
+## Fluxo de uma requisicao
+
+1. A requisicao HTTP chega no handler (`handler/user.go`).
+2. O handler valida os dados e converte o JSON para o modelo de dominio (`core.User`).
+3. O handler chama o servico do dominio (`core.UserService`).
+4. O servico executa a regra de negocio e usa a interface do repositorio (`core.Repository[T]`).
+5. O adaptador concreto em memoria grava os dados.
+6. A resposta volta formatada para o cliente.
 
 ```mermaid
-flowchart TD
-    A[Mundo Externo <br> API / CLI] -->|Requisição| B[Adaptador de Entrada]
-    B -->|Conversão de Dados| C[Porta de Entrada <br> Interface]
-    C -->|Execução| D((Regra de Domínio <br> Lógica Pura))
-    D -->|Requisição de Dados| E[Porta de Saída <br> Interface]
-    E -->|Contrato| F[Adaptador de Saída <br> Implementação]
-    F -->|Persistência| G[(Banco de Dados <br> Memória / SQL)]
+flowchart LR
+    A[Cliente HTTP] --> B[Handler HTTP]
+    B --> C[UserService - Porta Entrada]
+    C --> D[Regra de Negocio]
+    D --> E[Repository - Porta Saida]
+    E --> F[Memoria / Banco]
 ```

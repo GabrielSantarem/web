@@ -1,30 +1,57 @@
-# Generics em Go
+# Generics no Go
 
-A utilização de Generics permite a criação de estruturas que operam de forma independente de um tipo específico de dado, eliminando a redundância estrutural sem comprometer a validação estática do compilador.
+Anotacoes sobre o uso de Generics no projeto para evitar repeticao de codigo nos contratos de repositorio.
 
-### Instanciação em Tempo de Compilação
+## Por que usar Generics aqui
 
-O processo de compilação gera implementações estáticas exclusivas para cada tipo utilizado no sistema, evitando penalidades de desempenho em tempo de execução.
+Sem generics, para cada nova entidade (Usuario, Produto, etc.) seria necessario criar uma interface de repositorio e uma implementacao separada com praticamente os mesmos metodos (`Create`, `Update`, `FindByID`, `Delete`).
 
-```mermaid
-flowchart TD
-    A[Contrato Genérico Base <br> Repository T] --> B{Processo de Compilação <br> Monomorfização}
-    B -->|Instanciação com User| C[Repository User <br> Otimizado para User]
-    B -->|Instanciação com Product| D[Repository Product <br> Otimizado para Product]
+Com generics, criamos uma unica porta base: `Repository[T]`.
+
+## Restricao com Interfaces (Constraints)
+
+Para que o repositorio generico consiga pegar o ID de qualquer entidade, definimos uma interface restritiva:
+
+```go
+type Entity interface {
+    GetID() string
+}
 ```
-A Relação com Interfaces (Restrições)
 
-Em Go, as interfaces operam como restrições (bounds) para os tipos genéricos. Elas estabelecem um filtro estrito: o parâmetro genérico só aceitará tipos que assinarem o contrato definido pela interface.
+Qualquer tipo que entrar no generic precisa implementar esse metodo.
+
+## Exemplo no projeto
+
+1. Definicao do contrato no core (`internal/core/repository.go`):
+```go
+type Repository[T Entity] interface {
+    Create(entity T) (T, error)
+    Update(entity T) (T, error)
+    FindByID(id string) (T, error)
+    FindAll() ([]T, error)
+    Delete(id string) error
+}
+```
+
+2. Entidade User satisfazendo a constraint (`internal/core/user.go`):
+```go
+func (u *User) GetID() string {
+    return u.ID
+}
+```
+
+3. Adaptador concreto (`internal/adapters/memory_repository.go`):
+```go
+repo := adapters.NewMemoryRepository[*core.User]()
+```
+
+## Como o compilador trata isso
+
+O Go faz monomorfizacao durante a compilacao. Ele gera uma versao especializada do codigo para cada tipo usado, sem custo de desempenho em tempo de execucao e sem usar reflection (`reflect`) ou `interface{}`/`any` solto.
+
 ```mermaid
 flowchart TD
-    A[Interface Restritiva <br> Regra: T deve possuir o método GetID] --> B{Validação do Compilador}
-    
-    C[Entidade: User <br> Possui o método GetID] --> B
-    D[Entidade: Invoice <br> Não possui o método GetID] --> B
-    
-    B -->|Avaliação de User| E[APROVADO <br> Tipo aceito no Genérico]
-    B -->|Avaliação de Invoice| F[REJEITADO <br> Erro de compilação]
-    
-    style E stroke:#198754,stroke-width:2px
-    style F stroke:#dc3545,stroke-width:2px
+    A[Repository T com constraint Entity] --> B{Compilador Go}
+    B -->|Tipo User| C[Instancia especializada para User]
+    B -->|Tipo sem GetID| D[Erro de compilacao]
 ```
