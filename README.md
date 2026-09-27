@@ -1,11 +1,35 @@
-# Projeto de Estudo: Portas e Adaptadores em Go
+# Estudo de Arquitetura Hexagonal em Go
 
-Este repositório não possui um objetivo específico de produto. Ele é utilizado para estudo, pesquisa e experimentação de padrões de projeto de software.
+Projeto simples que fiz para estudar arquitetura hexagonal (portas e adaptadores) e generics no Go.
 
-## Documentação e Anotações de Estudo
+## Estrutura das pastas
 
-Para detalhes sobre as tecnologias e arquiteturas exploradas, consulte os documentos abaixo:
+- `internal/core`: regras de negocio e interfaces (portas).
+- `internal/adapters`: repositorio em memoria (adaptador de saida).
+- `handler`: handlers http e validacao dos dados (adaptador de entrada).
+- `docs/`: anotacoes de estudo.
 
-* [Diário de Estudos e Decisões](./docs/log-de-estudos.md)
-* [Conceitos: Arquitetura Hexagonal (Ports & Adapters)](./docs/arquitetura-hexagonal.md)
-* [Anotações Técnicas: Generics no Go](./docs/go-generics.md)
+## Como rodar
+
+Rodar a aplicacao:
+```bash
+go run main.go
+```
+
+Rodar os testes:
+```bash
+go test ./...
+```
+
+## Rotas da API
+
+- `GET /`: rota simples de hello.
+- `POST /users/create`: cria usuario (envia json com `name` e `email`).
+- `GET /users/{id}`: busca um usuario pelo id.
+- `PATCH /users/{id}/activate`: ativa um usuario.
+
+## Documentos
+
+- [Diario de Estudos](./docs/log-de-estudos.md)
+- [Arquitetura Hexagonal](./docs/arquitetura-hexagonal.md)
+- [Generics no Go](./docs/go-generics.md)
