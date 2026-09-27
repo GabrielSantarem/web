@@ -5,7 +5,7 @@ Projeto simples que fiz para estudar arquitetura hexagonal (portas e adaptadores
 ## Estrutura das pastas
 
 - `internal/core`: regras de negocio e interfaces (portas).
-- `internal/adapters`: repositorio em memoria (adaptador de saida).
+- `internal/adapters`: repositorios em memoria e SQLite (adaptadores de saida).
 - `handler`: handlers http e validacao dos dados (adaptador de entrada).
 - `docs/`: anotacoes de estudo.
 

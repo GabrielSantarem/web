@@ -56,3 +56,12 @@ Anotacoes curtas sobre o que foi feito e decidido em cada etapa do projeto.
 
 - **O que valeu a pena**: isolar o dominio facilita muito escrever testes unitarios rapidos e trocar a implementacao do banco sem mexer na regra de negocio.
 - **Dificuldade**: no inicio parece excesso de arquivos e interfaces para um crud simples, mas fica mais organizado conforme o projeto cresce.
+
+---
+
+## 27/09/2026 - Novo adaptador de saida: SQLite
+
+- Criado `SQLiteUserRepository` implementando a mesma interface `core.UserRepository`.
+- Usado o driver pure Go `modernc.org/sqlite` sem necessidade de CGO.
+- Mapeamento dos erros do SQLite para os erros de negocio do `core` (ex: erro de constraint UNIQUE virando `core.ErrEmailAlreadyUsed`).
+- Validado na pratica o maior beneficio de portas e adaptadores: a troca do adaptador em memoria por um banco real nao exigiu nenhuma alteracao no dominio (`core`) ou nas rotas (`handler`).
